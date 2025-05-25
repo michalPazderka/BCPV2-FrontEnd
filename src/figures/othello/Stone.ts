@@ -25,7 +25,7 @@ export class Stone implements Piece {
         return [];
     }
     getPieceImage(piece: Piece): string {
-        return `/img/${piece.color}-${piece.type}.png`;
+        return `/img/${piece.color}-stone.png`;
     }
     setPiecePosition(x: number, y: number): void {
         this.position = [x, y];

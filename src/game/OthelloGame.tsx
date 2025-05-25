@@ -15,7 +15,7 @@ export class OthelloGame extends AbsGame {
         super(board, gameId, stompClient);
         this.playerColor = playerColor;
         this.board = board;
-        this.currentPlayer = FigureColor.White;
+        this.currentPlayer = FigureColor.Black;
         this.activePiece = null;
         this.players = new Map<number, FigureColor>([
             [0, FigureColor.White],
@@ -51,22 +51,27 @@ export class OthelloGame extends AbsGame {
     }
 
     async addStone(x: number, y: number): Promise<void> {
-        if (this.APPM && this.APPM.length > 0) {
-            for (let i = 0; i < this.APPM.length; i++) {
-                if (x === this.APPM[i][0] && y === this.APPM[i][1]) {
-                    const move = `${x}${y}`;
-                    if (this.stompClient && this.stompClient.connected) {
-                        this.stompClient.publish({
-                            destination: "/app/move",
-                            body: JSON.stringify({ gameId: this.gameId, move: move }),
-                        });
-                        console.log("📤 Move sent via WebSocket:", move);
-                    } else {
-                        console.error("❌ WebSocket not connected!");
-                        return;
-                    }
+        console.log("function begining " + this.APPM);
+        if (!(this.APPM && this.APPM.length > 0)) {
+            this.APPM = this.board.getAllValidMoves();
+            console.log("middle of function" + this.APPM);
+        }
+        for (let i = 0; i < this.APPM.length; i++) {
+            if (x === this.APPM[i][0] && y === this.APPM[i][1]) {
+                const move = `${x}${y}`;
+                if (this.stompClient && this.stompClient.connected) {
+                    this.stompClient.publish({
+                        destination: "/app/othello/move",
+                        body: JSON.stringify({ gameId: this.gameId, move: move }),
+                    });
+                    this.APPM.length = 0;
+                    console.log("📤 Move sent via WebSocket:", move);
+                } else {
+                    console.error("❌ WebSocket not connected!");
+                    return;
                 }
             }
+
         }
 
     }

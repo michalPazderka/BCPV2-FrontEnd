@@ -23,11 +23,11 @@ export class OthelloBoard implements Board {
     }
 
     updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]) {
-        console.log("♟️ Updating Othello board with data:", chessBoardDTO);
         this.deletePieces();
         this.initialize(chessBoardDTO);
         this.addPieceImageLoop();
     }
+
     initialize(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]): JSX.Element {
         let board = this.createBoard();
         for (let row = 0; row < chessBoardDTO.length; row++) {
@@ -106,16 +106,17 @@ export class OthelloBoard implements Board {
         }
     }
 
-    getAllValidMoves(): number[][] {
-        let squares: number[][] = [];
+    getAllValidMoves(): [number, number][] {
+        let squares: [number, number][] = [];
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
                 let possibleMoves = this.isPiecePlacable(i, j, this.game.currentPlayer)
-                if (possibleMoves.length != null) {
+                if (possibleMoves.length != null && possibleMoves.length > 0) {
                     squares.push([i, j]);
                 }
             }
         }
+        console.log("squares: " + squares);
         return squares;
     }
 
@@ -127,24 +128,22 @@ export class OthelloBoard implements Board {
             [1, -1], [1, 0], [1, 1]
         ];
 
-        for (let key in directions) {
-            let row = r + parseInt(key[0]);
-            let col = c + parseInt(key[1]);
+        for (let [dx, dy] of directions) {
+            let row = r + dx;
+            let col = c + dy;
             let tempSquares: number[][] = [];
-
 
             while (this.isInBounds(row, col) && this.board[row][col] != null && this.isEnemy(row, col, color)) {
                 tempSquares.push([row, col]);
 
-                row += parseInt(key[0]);
-                col += parseInt(key[1]);
+                row += dx;
+                col += dy;
             }
 
             if (this.isInBounds(row, col) && this.isAllay(row, col, color)) {
                 squares.push(...tempSquares);
             }
         }
-
         return squares;
 
     }
@@ -197,7 +196,7 @@ export class OthelloBoard implements Board {
     }
 
     handleClick(x: number, y: number) {
-        // this.game.addStone(x, y);
+        this.game.addStone(x, y);
     }
 
     setGame(game: AbsGame): void {

@@ -12,7 +12,7 @@ import { OthelloBoard } from "./board/OthelloBoard";
 
 const App: React.FC = () => {
   const [boardContent, setBoardContent] = useState<JSX.Element | null>(null);
-  const [chessGame, setChessGame] = useState<AbsGame | null>(null);
+  const [game, setGame] = useState<AbsGame | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
   const [showGames, setShowGames] = useState(false);
   const [showGameOptions, setShowGameOptions] = useState(false);
@@ -55,45 +55,6 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("❌ Error creating game:", error);
     }
-    /*try {
-      const response = await fetch("http://localhost:8080/chess/new", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: selectedColor,
-      });
-
-      if (!response.ok) throw new Error("Failed to create game");
-
-      const gameData = await response.json();
-      console.log("✅ New game created:", gameData);
-
-      setGameId(gameData.gameId);
-      if (!stompClient) return console.error("❌ WebSocket client not initialized!");
-      let board = new ChessBoard();
-      const newGame = GameFactory.createGame("chess", gameData.gameId, stompClient, board, selectedColor);
-      board.setGame(newGame);
-      setChessGame(newGame);
-      setBoardContent(await newGame.startGame(gameData.gameId, gameData.chessBoard));
-      setShowColors(false);
-      setShowGameOptions(false);
-      setShowGames(false);
-
-
-      // ✅ Přihlásíme se k odběru herních updatů
-      stompClient.subscribe(`/topic/game/${gameData.gameId}`, (message) => {
-        const gameState = JSON.parse(message.body);
-        console.log("♟️ Game update received:", gameState);
-        if (Array.isArray(gameState.chessBoard)) {
-          newGame.getBoard().updateBoard(gameState.chessBoard);
-          if (gameState.winner != null) {
-            newGame.gameEnd(gameState.winner);
-          }
-          newGame.setCurrentPlayer(gameState.isPlaying);
-        }
-      });
-    } catch (error) {
-      console.error("❌ Error creating game:", error);
-    }*/
   }, [stompClient]);
 
   const createChessGame = async (selectedColor: FigureColor) => {
@@ -114,8 +75,8 @@ const App: React.FC = () => {
     let board = new ChessBoard();
     const newGame = GameFactory.createGame("chess", gameData.gameId, stompClient, board, selectedColor);
     board.setGame(newGame);
-    setChessGame(newGame);
-    setBoardContent(await newGame.startGame(gameData.gameId, gameData.chessBoard));
+    setGame(newGame);
+    setBoardContent(await newGame.startGame(gameData.gameId, gameData.board));
     setShowColors(false);
     setShowGameOptions(false);
     setShowGames(false);
@@ -141,27 +102,27 @@ const App: React.FC = () => {
       body: selectedColor,
     });
 
-    if (!response.ok) throw new Error("Failed to create chess game");
+    if (!response.ok) throw new Error("Failed to create othello game");
 
     const gameData = await response.json();
     console.log("✅ New othello game created:", gameData);
 
     setGameId(gameData.gameId);
     if (!stompClient) return console.error("❌ WebSocket client not initialized!");
+
     let board = new OthelloBoard();
     const newGame = GameFactory.createGame("othello", gameData.gameId, stompClient, board, selectedColor);
     board.setGame(newGame);
-    setChessGame(newGame);
-    setBoardContent(await newGame.startGame(gameData.gameId, gameData.othelloBoard));
+    setGame(newGame);
+    setBoardContent(await newGame.startGame(gameData.gameId, gameData.board));
     setShowColors(false);
-    setShowGameOptions(false);;
+    setShowGameOptions(false);
     setShowGames(false);
 
     stompClient.subscribe(`/topic/game/${gameData.gameId}`, (message) => {
       const gameState = JSON.parse(message.body);
-      console.log("Othello game update received:", gameState);
-      if (Array.isArray(gameState.chessBoard)) {
-        newGame.getBoard().updateBoard(gameState.chessBoard);
+      if (Array.isArray(gameState.board)) {
+        newGame.getBoard().updateBoard(gameState.board);
         if (gameState.winner != null) {
           newGame.gameEnd(gameState.winner);
         }
@@ -170,19 +131,17 @@ const App: React.FC = () => {
     });
   };
 
-  // ✅ Funkce pro připojení ke hře
   const handleColors = useCallback(async () => {
     if (!gameId) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/chess/${gameId}`);
+      const response = await fetch(`http://localhost:8080/general/${gameId}`);
       if (!response.ok) throw new Error("Game not found");
 
       const gameData = await response.json();
       console.log("✅ Joined game:", gameData);
 
       if (!stompClient) return console.error("❌ WebSocket client not initialized!");
-      // 📌 Nastavíme dostupné barvy pro výběr a zobrazíme okno
       setAvailableColors(gameData.restOfColors);
       setCreateJoinBool(true);
       setShowColors(true);
@@ -195,7 +154,14 @@ const App: React.FC = () => {
     if (!gameId) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/chess/join/${gameId}`, {
+      let string;
+      if (selectedGame == Games.Chess) {
+        string = "chess";
+      } else if (selectedGame == Games.Othello) {
+        string = "othello";
+      } else throw new Error("Game does not exist");
+
+      const response = await fetch(`http://localhost:8080/${string}/join/${gameId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: color,
@@ -203,15 +169,21 @@ const App: React.FC = () => {
 
       if (!response.ok) throw new Error("Failed to choose color");
 
+
       const gameData = await response.json();
       console.log("✅ Color chosen:", gameData);
       if (!stompClient) return console.error("❌ WebSocket client not initialized!");
-      let board = new ChessBoard();
-      const newGame = GameFactory.createGame("chess", gameId, stompClient, board, color);
+      let board;
+      if (string == "chess") {
+        board = new ChessBoard();
+      } else if (string == "othello") {
+        board = new OthelloBoard();
+      } else throw new Error("Game does not exist");
+      const newGame = GameFactory.createGame(string, gameId, stompClient, board, color);
       board.setGame(newGame);
       newGame.setCurrentPlayer(gameData.isPlaying);
-      setChessGame(newGame);
-      setBoardContent(await newGame.startGame(gameData.gameId, gameData.chessBoard));
+      setGame(newGame);
+      setBoardContent(await newGame.startGame(gameData.gameId, gameData.board));
 
       setShowColors(false);
       setShowGameOptions(false);
@@ -219,9 +191,8 @@ const App: React.FC = () => {
 
       stompClient.subscribe(`/topic/game/${gameData.gameId}`, (message) => {
         const gameState = JSON.parse(message.body);
-        console.log("♟️ Game update received:", gameState);
-        if (Array.isArray(gameState.chessBoard)) {
-          newGame.getBoard().updateBoard(gameState.chessBoard);
+        if (Array.isArray(gameState.board)) {
+          newGame.getBoard().updateBoard(gameState.board);
           if (gameState.winner != null) {
             newGame.gameEnd(gameState.winner);
           }
@@ -234,10 +205,10 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (chessGame && boardContent && !chessGame.getBoard().getRendered()) {
-      chessGame.getBoard().addPieceImageLoop();
+    if (game && boardContent && !game.getBoard().getRendered()) {
+      game.getBoard().addPieceImageLoop();
     }
-  }, [chessGame, boardContent]);
+  }, [game, boardContent]);
 
   return (
     <div className="app">

@@ -68,7 +68,7 @@ export class ChessGame extends AbsGame {
 
                         if (this.stompClient && this.stompClient.connected) {
                             this.stompClient.publish({
-                                destination: "/app/move",
+                                destination: "/app/chess/move",
                                 body: JSON.stringify({ gameId: this.gameId, move: move }),
                             });
                             console.log("📤 Move sent via WebSocket:", move);
