@@ -44,5 +44,4 @@ export abstract class AbsGame {
         this.currentPlayerIndex = currentPlayerIndex;
     }
 
-    abstract gameEnd(gameEnd: string): void;
 }

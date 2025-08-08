@@ -7,13 +7,10 @@ export class ChessGame extends AbsGame {
     currentPlayer: FigureColor;
     gameStatus: GameStatus;
     playerColor: FigureColor | null;
-    //moveHistory: Move[];
     board: ChessBoard
-    //round: number;
     APPM: [number, number][] | undefined;
     activePiece: Piece | null;
-    //materialBlack: string[];
-    //materialWhite: string[];
+
     constructor(stompClient: any, gameId: string, board: ChessBoard, playerColor: FigureColor | null) {
         super(board, gameId, stompClient);
         this.playerColor = playerColor;
@@ -25,10 +22,6 @@ export class ChessGame extends AbsGame {
             [0, FigureColor.White],
             [1, FigureColor.Black]
         ]);
-        //  this.moveHistory = [];
-        //this.round = 1;
-        //this.materialBlack = ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "rook", "rook", "bishop", "bishop", "horse", "horse", "queen"];
-        //this.materialWhite = ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "rook", "rook", "bishop", "bishop", "horse", "horse", "queen"];
     }
 
     addPlayers(players: Map<number, FigureColor>) {
@@ -89,12 +82,14 @@ export class ChessGame extends AbsGame {
             }
         }
         if (piece !== null && piece.color === this.currentPlayer && !didMove && this.playerColor === piece.color) {
+            console.log("nemůže hrát")
             this.activePiece = piece;
             this.APPM = piece.getPossibleMoves(this.board);
             if (this.APPM.length > 0) {
-                this.board.posibleMoves(this.APPM);
+                this.board.possibleMoves(this.APPM);
             }
         } else {
+            console.log("aaaaaa")
             this.board.deleteCss();
         }
     }
@@ -148,13 +143,7 @@ export class ChessGame extends AbsGame {
             this.round++;
         }
     }*/
-    gameEnd(gameEnd: string): void {
-        if (gameEnd == "DRAW") {
-            alert("Hra skončila remízou");
-        } else {
-            alert("Vyhrává: " + gameEnd);
-        }
-    }
+
     /*materialCounting(piece: Piece): void {
         let color = piece.color;
         let name = piece.type

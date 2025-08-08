@@ -42,19 +42,13 @@ export class OthelloGame extends AbsGame {
         }
     }
 
-    gameEnd(gameEnd: string): void {
-        if (gameEnd == "DRAW") {
-            alert("Hra skončila remízou");
-        } else {
-            alert("Vyhrává: " + gameEnd);
-        }
-    }
-
     async addStone(x: number, y: number): Promise<void> {
-        console.log("function begining " + this.APPM);
+        if (this.currentPlayer !== this.playerColor) {
+            return;
+        }
         if (!(this.APPM && this.APPM.length > 0)) {
             this.APPM = this.board.getAllValidMoves();
-            console.log("middle of function" + this.APPM);
+            this.board.possibleMoves(this.APPM);
         }
         for (let i = 0; i < this.APPM.length; i++) {
             if (x === this.APPM[i][0] && y === this.APPM[i][1]) {
@@ -101,6 +95,4 @@ export class OthelloGame extends AbsGame {
             this.currentPlayer = currentPlayer;
         }
     }
-
-
 }

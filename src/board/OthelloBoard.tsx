@@ -4,6 +4,7 @@ import { Board } from "./Board";
 import { FigureColor } from '../eunums/Color';
 import { Stone } from '../figures/othello/Stone';
 import { AbsGame } from '../game/AbsGame';
+import ColorsMenu from '../colorMenu/ColorMenu';
 
 
 export class OthelloBoard implements Board {
@@ -22,18 +23,20 @@ export class OthelloBoard implements Board {
         this.rendered = false;
     }
 
-    updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]) {
+    updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][], currentPlayer: number) {
+        this.deleteCss();
         this.deletePieces();
         this.initialize(chessBoardDTO);
         this.addPieceImageLoop();
+        this.game.setCurrentPlayer(currentPlayer);
     }
 
-    initialize(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]): JSX.Element {
+    initialize(othelloBoardDto: ({ pieceType: string, color: string } | null)[][]): JSX.Element {
         let board = this.createBoard();
-        for (let row = 0; row < chessBoardDTO.length; row++) {
-            for (let col = 0; col < chessBoardDTO[row].length; col++) {
-                const pieceType = chessBoardDTO[row][col]?.pieceType;
-                let color = chessBoardDTO[row][col]?.color;
+        for (let row = 0; row < othelloBoardDto.length; row++) {
+            for (let col = 0; col < othelloBoardDto[row].length; col++) {
+                const pieceType = othelloBoardDto[row][col]?.pieceType;
+                let color = othelloBoardDto[row][col]?.color;
                 let figureColor;
                 if (color === null || color == undefined) {
                     this.board[row][col] = null;
@@ -116,7 +119,6 @@ export class OthelloBoard implements Board {
                 }
             }
         }
-        console.log("squares: " + squares);
         return squares;
     }
 
@@ -159,14 +161,31 @@ export class OthelloBoard implements Board {
     addPieceImage(piece: Piece | null): void {
         if (piece == null) return;
         const imgSrc = piece.getPieceImage(piece);
+        const cellElement = document.getElementById(`${piece.position[0]}-${piece.position[1]}`);
+        if (!cellElement) return;
+        cellElement.innerHTML = "";
         const imgElement = document.createElement('img');
         imgElement.src = imgSrc;
         imgElement.classList.add('othello-piece');
-        const cellElement = document.getElementById(`${piece.position[0]}-${piece.position[1]}`);
-        if (cellElement !== null) {
-            cellElement.appendChild(imgElement);
+        cellElement.appendChild(imgElement);
+
+    }
+
+    possibleMoves(arr: number[][]): void {
+        for (let i = 0; i < arr.length; i++) {
+            let stringos: string = arr[i][0] + "-" + arr[i][1];
+            let square = document.getElementById(stringos);
+            if (square !== null) {
+                square.classList.add("possible-move");
+            }
         }
     }
+
+    deleteCss(): void {
+        const highlighted = document.querySelectorAll(".possible-move");
+        highlighted.forEach((el) => el.classList.remove("possible-move"));
+    }
+
 
     getPiece(x: number, y: number): Piece | null {
         return this.board[x][y];
@@ -174,24 +193,28 @@ export class OthelloBoard implements Board {
 
     createBoard(): JSX.Element {
         return (
-            <div className="chess-board">
-                {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="board-row">
-                        {Array.from({ length: 8 }).map((_, j) => this.createNewDiv(i, j))}
-                    </div>
-                ))}
+            <div className='othello-board-wraper'>
+                <div className="othello-board">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        Array.from({ length: 8 }).map((_, j) => this.createNewDiv(i, j))
+                    ))}
+                </div>
             </div>
         );
     }
 
     createNewDiv(i: number, j: number): JSX.Element {
+        const piece = this.board[i][j];
+        const id = `${j}-${i}`;
+
         return (
             <div
-                key={`${i}-${j}`}
-                id={`${j}-${i}`}
-                className={(i + j) % 2 === 0 ? "squaredark" : "squarelight"}
+                key={id}
+                id={id}
+                className="othello-cell"
                 onClick={() => this.handleClick(j, i)}
-            ></div>
+            >
+            </div>
         );
     }
 

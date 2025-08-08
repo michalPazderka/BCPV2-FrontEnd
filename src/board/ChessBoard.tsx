@@ -133,7 +133,7 @@ export class ChessBoard implements Board {
         if (x == 7 || x == 0) this.promote(x, y, piece.color);
     }*/
 
-    updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]) {
+    updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][], currentPlayer: number) {
         console.log("♟️ Updating board with data:", chessBoardDTO);
         this.deletePieces();
         this.initialize(chessBoardDTO);
@@ -181,6 +181,7 @@ export class ChessBoard implements Board {
     }
     initialize(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]): JSX.Element {
         let board = this.createBoard();
+        console.log(chessBoardDTO);
         for (let row = 0; row < chessBoardDTO.length; row++) {
             for (let col = 0; col < chessBoardDTO[row].length; col++) {
                 const pieceType = chessBoardDTO[row][col]?.pieceType;
@@ -251,29 +252,29 @@ export class ChessBoard implements Board {
     getPiece(x: number, y: number): Piece | null {
         return this.board[x][y];
     }
-    posibleMoves(arr: number[][]): void {
+
+    possibleMoves(arr: number[][]): void {
         for (let i = 0; i < arr.length; i++) {
             let stringos: string = arr[i][0] + "-" + arr[i][1];
-            let id = document.getElementById(stringos);
-            if (id !== null) {
-                id.style.backgroundColor = "red";
+            let square = document.getElementById(stringos);
+            if (square !== null) {
+                square.classList.add("possible-move");
             }
         }
     }
+
     movePiece(x: number, y: number, piece: Piece): void {
         let arr = piece.getPiecePosition();
         if (this.isEnemy(x, y, piece.getColor())) {
             let enemyPiece = this.getPiece(x, y);
             this.destroyPiece(x, y);
             this.deletePiece(x, y);
-            //this.game.materialCounting(enemyPiece!);
         }
         const pieceDirection = piece.color == FigureColor.White ? 1 : -1;
         if (piece.type == "PAWN" && this.isEnemy(x - pieceDirection, y, piece.getColor())) {
             let enemyPiece = this.getPiece(x - pieceDirection, y);
             this.destroyPiece(x - pieceDirection, y);
             this.deletePiece(x - pieceDirection, y);
-            //this.game.materialCounting(enemyPiece!);
         }
         this.deletePiece(arr[0], arr[1]);
         this.destroyPiece(arr[0], arr[1]);
@@ -282,6 +283,7 @@ export class ChessBoard implements Board {
         this.updatePiece(x, y, piece);
         piece.setPiecePosition(x, y);
     }
+
     setPiecePosition(x: number, y: number, piece: Piece, tempBoard: ChessBoard) {
         let arr = piece.getPiecePosition();
         if (tempBoard.isEnemy(x, y, piece.getColor())) {
@@ -291,20 +293,16 @@ export class ChessBoard implements Board {
         tempBoard.board[x][y] = piece;
         piece.setPiecePosition(x, y);
     }
+
     deleteCss(): void {
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                let stringos: string = i + "-" + j;
-                let id = document.getElementById(stringos);
-                if (id !== null) {
-                    id.style.backgroundColor = "";
-                }
-            }
-        }
+        const highlighted = document.querySelectorAll(".possible-move");
+        highlighted.forEach((el) => el.classList.remove("possible-move"));
     }
+
     destroyPiece(x: number, y: number) {
         this.board[x][y] = null;
     }
+
     deletePiece(x: number, y: number): void {
         const div = document.getElementById(`${x}-${y}`);
         let img = div?.querySelector('img');
@@ -312,6 +310,7 @@ export class ChessBoard implements Board {
             img.remove();
         }
     }
+
     updatePiece(x: number, y: number, piece: Piece): void {
         let div = document.getElementById(`${x}-${y}`);
         const imgSrc = piece.getPieceImage(piece);
@@ -323,6 +322,7 @@ export class ChessBoard implements Board {
             cellElement.appendChild(imgElement);
         }
     }
+
     getKing(color: FigureColor): Piece | null {
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
@@ -334,6 +334,7 @@ export class ChessBoard implements Board {
         }
         return null;
     }
+
     isMoveCheck(color: FigureColor): boolean {
         let king = this.getKing(color);
         if (king !== null) {
@@ -354,9 +355,10 @@ export class ChessBoard implements Board {
         }
         return false;
     }
-    changePostion(posibleMoves: [number, number], position: [number, number]): boolean {
+
+    changePostion(possibleMoves: [number, number], position: [number, number]): boolean {
         let tempBoard = this.clone();
-        let enemyPiece = tempBoard.getPiece(posibleMoves[0], posibleMoves[1]);
+        let enemyPiece = tempBoard.getPiece(possibleMoves[0], possibleMoves[1]);
         let piece = tempBoard.getPiece(position[0], position[1]);
         if (enemyPiece != null && piece != null) {
             let enemyPiecePosition = enemyPiece.position;
@@ -368,7 +370,7 @@ export class ChessBoard implements Board {
                 }
             }
         } else if (piece != null) {
-            let posibleMove = posibleMoves;
+            let posibleMove = possibleMoves;
             tempBoard.setPiecePosition(posibleMove[0], posibleMove[1], piece, tempBoard);
             let King = tempBoard.getKing(piece.color);
             if (King != null) {
@@ -400,12 +402,12 @@ export class ChessBoard implements Board {
 
     createBoard(): JSX.Element {
         return (
-            <div className="chess-board">
-                {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="board-row">
-                        {Array.from({ length: 8 }).map((_, j) => this.createNewDiv(i, j))}
-                    </div>
-                ))}
+            <div className='border-wrapper'>
+                <div className="chess-board">
+                    {Array.from({ length: 8 }).flatMap((_, i) =>
+                        Array.from({ length: 8 }).map((_, j) => this.createNewDiv(j, 7 - i))
+                    )}
+                </div>
             </div>
         );
     }
