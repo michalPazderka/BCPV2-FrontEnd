@@ -55,28 +55,6 @@ export class Pawn implements Piece {
           moves.push([x + 1, y]);
         }
       }
-      /*const lastMove = this.game.moveHistory[game.moveHistory.length-1];
-      if(lastMove != null){
-        const lastMoveIsPawn = lastMove.piece.type == this.type;
-        const indexInNumber = lastMove.changeToNumber(lastMove.to[1]);
-        const directionBasedOnColor =lastMove.from[0]-1 == (this.color == FigureColor.Black ? 1 : 6);
-        const trueDirection =  lastMove.to[0]-1 == this.position[0];
-        if(indexInNumber == this.position[1]-1 && trueDirection && directionBasedOnColor && lastMoveIsPawn){
-          if(board.isEmpty(x,y-1)){
-            if(game.board.changePostion([x,y], this.position)){
-              moves.push([x,y-1]);
-            }
-          }
-        }
-        if(indexInNumber == this.position[1]+1 && trueDirection && directionBasedOnColor && lastMoveIsPawn){
-          if(board.isEmpty(x,y+1)){
-            if(game.board.changePostion([x,y], this.position)){
-              moves.push([x,y+1]);
-            }
-          }
-        }
-      }
-        */
     }
     return moves;
   }
@@ -100,23 +78,6 @@ export class Pawn implements Piece {
       if (this.position[0] == 1 && this.color == FigureColor.White && tempBoard.isEmpty(x + 1, y)) {
         moves.push([x + 1, y]);
       }
-      /*const lastMove = game.moveHistory[game.moveHistory.length-1];
-      if(lastMove != null){
-        const lastMoveIsPawn = lastMove.piece.type == this.type;
-        const indexInNumber = lastMove.changeToNumber(lastMove.to[1]);
-        const directionBasedOnColor =lastMove.from[0]-1 == (this.color == FigureColor.Black ? 1 : 6);
-        const trueDirection =  lastMove.to[0]-1 == this.position[0];
-        if(indexInNumber == this.position[1]-1 && trueDirection && directionBasedOnColor && lastMoveIsPawn){
-          if(tempBoard.isEmpty(x,y-1)){
-              moves.push([x,y-1]);
-          }
-        }
-        if(indexInNumber == this.position[1]+1 && trueDirection && directionBasedOnColor && lastMoveIsPawn){
-          if(tempBoard.isEmpty(x,y+1)){
-              moves.push([x,y+1]);           
-          }
-        }
-      }*/
     }
     return moves;
   }

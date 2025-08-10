@@ -33,8 +33,7 @@ const App: React.FC = () => {
       playerId = crypto.randomUUID();
       localStorage.setItem("playerId", playerId);
     }
-    console.log(localStorage.getItem("gameId"));
-    console.log(localStorage.getItem("gameColor"));
+
     const client = new Client({
       brokerURL: "ws://localhost:8080/ws",
       heartbeatIncoming: 10000,
@@ -53,7 +52,6 @@ const App: React.FC = () => {
 
         if (savedGameId) {
           setGameId(savedGameId);
-          console.log(gameId);
           reconnectToGame(savedColor as FigureColor, savedGameId, client);
         }
       },
@@ -86,6 +84,7 @@ const App: React.FC = () => {
   }
 
   const handleCreateGame = useCallback(async (selectedColor: FigureColor | null, selectedGamee: Games | null) => {
+    console.log("aaaaa");
     if (selectedColor == null) throw new Error('Color not selected');
     console.log("Selected game: " + selectedColor);
     try {
@@ -219,27 +218,52 @@ const App: React.FC = () => {
   };
 
   const handleColors = useCallback(async () => {
-    if (!gameId) return;
+    if (gameId == null) {
+      try {
+        const response = await fetch(`http://localhost:8080/${selectedGame?.toLocaleLowerCase()}/colors`);
+        if (!response.ok) throw new Error("Game not found");
 
-    try {
-      const response = await fetch(`http://localhost:8080/general/${gameId}`);
-      if (!response.ok) throw new Error("Game not found");
+        console.log(selectedGame);
+        const gameData = await response.json();
+        console.log("✅ Joined game:", gameData);
 
-      const gameData = await response.json();
-      console.log("✅ Joined game:", gameData);
-
-      if (!stompClient) {
-        showToast("WebSocket není připojen")
-        return;
+        if (!stompClient) {
+          showToast("WebSocket není připojen")
+          return;
+        }
+        console.log(gameData);
+        let colors = String(gameData.color);
+        console.log("colors " + typeof colors);
+        let colorsArr = colors.split(",");
+        colorsArr.forEach((color) => availableColors.push(color == "WHITE" ? FigureColor.White : FigureColor.Black));
+        setCreateJoinBool(false);
+      } catch (error) {
+        console.log(error);
+        showToast("Nepodařilo se připojit ke hře!")
       }
-      console.log(gameData.game);
-      setSelectedGame(gameData.game.toUpperCase());
-      console.log(selectedGame);
-      setAvailableColors(gameData.restOfColors);
-      setCreateJoinBool(true);
-      setShowColors(true);
-    } catch (error) {
-      showToast("Nepodařilo se připojit ke hře")
+    } else {
+      try {
+        const response = await fetch(`http://localhost:8080/general/${gameId}`);
+        if (!response.ok) throw new Error("Game not found");
+
+        const gameData = await response.json();
+        console.log("✅ Joined game:", gameData);
+
+        if (!stompClient) {
+          showToast("WebSocket není připojen")
+          return;
+        }
+        setSelectedGame(gameData.game.toUpperCase());
+        if (String(gameData.restOfColors).length == 0) {
+          showToast("Hra je plná");
+          return;
+        }
+        setAvailableColors(gameData.restOfColors);
+        setCreateJoinBool(true);
+        setShowColors(true);
+      } catch (error) {
+        showToast("Nepodařilo se připojit ke hře")
+      }
     }
   }, [gameId, stompClient]);
 
@@ -409,7 +433,10 @@ const App: React.FC = () => {
               setGameId(gameId);
               handleColors();
             }}
-              onCreateGame={() => { setShowGameOptions(!showGameOptions) }}
+              onCreateGame={() => {
+                setShowGameOptions(!showGameOptions)
+                handleColors();
+              }}
             />
           }
         </div>)
@@ -420,14 +447,25 @@ const App: React.FC = () => {
             setSelectedGame(game);
             setShowColors(!showColors);
             setShowGameOptions(!showGameOptions);
-          }} onClose={() => setShowGameOptions(false)}
+          }} onClose={() => {
+            setShowGameOptions(false);
+            setGameId(null);
+          }
+          }
           />
         )
       }
       {
         (showColors) && (
           <div>
-            <ColorsMenu availableColors={availableColors} onSelectColor={(color) => { setSelectedColor(color); createJoinBool ? handleGameJoin(color) : handleCreateGame(color, selectedGame); }} onClose={() => setShowColors(false)} />
+            <ColorsMenu availableColors={availableColors}
+              onSelectColor={(color) => {
+                setSelectedColor(color); createJoinBool ? handleGameJoin(color) : handleCreateGame(color, selectedGame);
+              }}
+              onClose={() => {
+                setShowColors(false);
+                setGameId(null);
+              }} />
           </div>
         )
       }

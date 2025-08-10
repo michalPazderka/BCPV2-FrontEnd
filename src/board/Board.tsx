@@ -70,10 +70,5 @@ export interface Board {
         if (rook == null) return;
         this.movePiece(direction, rookPosition == 0 ? 3 : 5, rook);
     }
-    promote(x: number, y: number, color: FigureColor): void {
-        this.game.board.deletePiece(x, y);
-        this.game.board.destroyPiece(x, y);
-        this.board[x][y] = new Quenn(color, [x, y], this.game);
-        this.addPieceImage(this.getPiece(x, y));
-    }*/
+    */
 }

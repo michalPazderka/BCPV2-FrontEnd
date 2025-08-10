@@ -1,7 +1,8 @@
-import { FigureColor, GameStatus } from "../eunums/Color";
+import { FigureColor, FigureType, GameStatus } from "../eunums/Color";
 import { Piece } from "../figures/Piece";
 import { AbsGame } from "./AbsGame";
 import { ChessBoard } from "../board/ChessBoard";
+import { Move } from "../move/Move"
 
 export class ChessGame extends AbsGame {
     currentPlayer: FigureColor;
@@ -9,6 +10,7 @@ export class ChessGame extends AbsGame {
     playerColor: FigureColor | null;
     board: ChessBoard
     APPM: [number, number][] | undefined;
+    moveHistory: Move[];
     activePiece: Piece | null;
 
     constructor(stompClient: any, gameId: string, board: ChessBoard, playerColor: FigureColor | null) {
@@ -18,6 +20,7 @@ export class ChessGame extends AbsGame {
         this.currentPlayer = FigureColor.White;
         this.gameStatus = GameStatus.ONGOING;
         this.activePiece = null;
+        this.moveHistory = [];
         this.players = new Map<number, FigureColor>([
             [0, FigureColor.White],
             [1, FigureColor.Black]
@@ -57,14 +60,28 @@ export class ChessGame extends AbsGame {
                 for (let i = 0; i < this.APPM.length; i++) {
                     if (x === this.APPM[i][0] && y === this.APPM[i][1]) {
                         let arr = this.activePiece.getPiecePosition();
-                        const move = `${arr[0]}${arr[1]}${x}${y}`;
 
                         if (this.stompClient && this.stompClient.connected) {
-                            this.stompClient.publish({
-                                destination: "/app/chess/move",
-                                body: JSON.stringify({ gameId: this.gameId, move: move }),
-                            });
-                            console.log("📤 Move sent via WebSocket:", move);
+                            const diff = arr[1] - y;
+                            console.log(diff);
+                            if (this.activePiece.type == FigureType.King && (Math.abs(diff) == 2)) {
+                                const rookPosition = diff > 0 ? 0 : 7;
+                                const move = `${arr[0]}${arr[1]}${x}${y}${rookPosition}`;
+                                this.stompClient.publish({
+                                    destination: "/app/chess/move",
+                                    body: JSON.stringify({ gameId: this.gameId, move: move }),
+                                });
+                                console.log("📤 Move sent via WebSocket:", move);
+
+                            } else {
+
+                                const move = `${arr[0]}${arr[1]}${x}${y}`;
+                                this.stompClient.publish({
+                                    destination: "/app/chess/move",
+                                    body: JSON.stringify({ gameId: this.gameId, move: move }),
+                                });
+                                console.log("📤 Move sent via WebSocket:", move);
+                            }
                         } else {
                             console.error("❌ WebSocket not connected!");
                             return;
@@ -73,7 +90,7 @@ export class ChessGame extends AbsGame {
                         this.switchPlayer();
                         this.board.isCheck(this.currentPlayer);
                         this.board.isMate(this.currentPlayer);
-
+                        this.moveHistory.push(new Move(`${arr[0]}${arr[1]}`, `${x}${y}`, this.activePiece, this.board.getPiece(x, y)));
                         didMove = true;
                         break;
                     }
@@ -85,6 +102,9 @@ export class ChessGame extends AbsGame {
             console.log("nemůže hrát")
             this.activePiece = piece;
             this.APPM = piece.getPossibleMoves(this.board);
+            if (piece.type == FigureType.King) {
+
+            }
             if (this.APPM.length > 0) {
                 this.board.possibleMoves(this.APPM);
             }

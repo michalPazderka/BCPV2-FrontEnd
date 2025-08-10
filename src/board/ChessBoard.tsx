@@ -1,5 +1,5 @@
 import { Piece } from '../figures/Piece';
-import { FigureColor, GameStatus } from "../eunums/Color";
+import { FigureColor, FigureType, GameStatus } from "../eunums/Color";
 import { Pawn } from "../figures/Pawn";
 import { Bishop } from "../figures/Bishop";
 import { ChessGame } from "../game/ChessGame";
@@ -9,6 +9,7 @@ import { Quenn } from "../figures/Quenn";
 import { King } from "../figures/King";
 import { Board } from "./Board";
 import { AbsGame } from "../game/AbsGame";
+import { Square } from './Square';
 
 export class ChessBoard implements Board {
     board: (Piece | null)[][];
@@ -128,10 +129,6 @@ export class ChessBoard implements Board {
         }
         return false;
     }
-    /*checkIfMovePromote(x: number, y: number, piece: Piece): void {
-        if (piece.type != "PAWN") return;
-        if (x == 7 || x == 0) this.promote(x, y, piece.color);
-    }*/
 
     updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][], currentPlayer: number) {
         console.log("♟️ Updating board with data:", chessBoardDTO);
@@ -425,6 +422,68 @@ export class ChessBoard implements Board {
 
     handleClick(x: number, y: number) {
         this.game.movePiece(x, y);
+    }
+
+    castleEightSide(color: FigureColor) {
+        if (this.game.moveHistory.length == 0) return false;
+        let rookPosition: number = color === FigureColor.White ? 1 : 8;
+        for (let move of this.game.moveHistory) {
+            let from = move.from.split("");
+            if (color == move.piece.color && FigureType.King == move.piece.type) {
+                return false;
+            }
+            if (from[0] == rookPosition.toString() && from[1] == "7") {
+                return false
+            }
+            const isSquareUnderAttack5 = this.isSquareUnderAttack(rookPosition - 1, 5, this.changeColor(color));
+            const isSquareUnderAttack6 = this.isSquareUnderAttack(rookPosition - 1, 6, this.changeColor(color));
+
+            if (isSquareUnderAttack5 || isSquareUnderAttack6) {
+                return false
+            }
+            const isSquareEmpty5 = this.isEmpty(rookPosition - 1, 5);
+            const isSquareEmpty6 = this.isEmpty(rookPosition - 1, 6);
+            if (!isSquareEmpty5 || !isSquareEmpty6) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+    castleOneSide(color: FigureColor) {
+        if (this.game.moveHistory.length == 0) return false;
+        let rookPosition: number = color === FigureColor.White ? 1 : 8;
+        for (let move of this.game.moveHistory) {
+            let from = move.from
+            if (color == move.piece.color && FigureType.King == move.piece.type) {
+                return false;
+            }
+            if (from[0] == rookPosition.toString() && from[1] == "0") {
+                return false
+            }
+            const isSquareUnderAttack3 = this.isSquareUnderAttack(rookPosition - 1, 3, this.changeColor(color));
+            const isSquareUnderAttack2 = this.isSquareUnderAttack(rookPosition - 1, 2, this.changeColor(color));
+
+            if (isSquareUnderAttack3 || isSquareUnderAttack2) {
+                return false
+            }
+            const isSquareEmpty3 = this.isEmpty(rookPosition - 1, 3);
+            const isSquareEmpty2 = this.isEmpty(rookPosition - 1, 2);
+            if (!isSquareEmpty3 || !isSquareEmpty2) {
+                return false;
+            }
+        }
+        return true
+    }
+
+    isSquareUnderAttack(row: number, col: number, color: FigureColor): boolean {
+        var getEveryTheoreticalMove = this.getEveryTheoreticalMove(color, this);
+        getEveryTheoreticalMove.forEach(move => {
+            if (move[0] == row && move[1] == col) {
+                return true;
+            }
+        })
+        return false;
     }
 
 }

@@ -29,14 +29,14 @@ export class King implements Piece {
                 moves.push([x, y]);
             }
         }
-        /*if (board.castleEightSide(this.color)) {
-            let rookPosition: number = this.color === Color.WHITE ? 0 : 7;
+        if (board.castleEightSide(this.color)) {
+            let rookPosition: number = this.color === FigureColor.White ? 0 : 7;
             moves.push([rookPosition, 6]);
         }
         if (board.castleOneSide(this.color)) {
-            let rookPosition: number = this.color === Color.WHITE ? 0 : 7;
+            let rookPosition: number = this.color === FigureColor.White ? 0 : 7;
             moves.push([rookPosition, 2]);
-        }*/
+        }
         return moves;
     }
     getTheoreticalPosibleMoves(board: ChessBoard): [number, number][] {
