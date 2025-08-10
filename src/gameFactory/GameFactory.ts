@@ -13,16 +13,12 @@ export class GameFactory {
         switch (gameType) {
             case "chess":
                 if (board instanceof ChessBoard) {
-                    console.log(color);
                     return new ChessGame(stompClient, gameId, board, color);
                 } else {
                     throw new OperationCanceledException();
                 }
-            case "checkers":
-            //return new Checkers(); // Implementace pro dámu
             case "othello":
                 if (board instanceof OthelloBoard) {
-                    console.log(color);
                     return new OthelloGame(stompClient, gameId, board, color);
                 } else {
                     throw new OperationCanceledException();

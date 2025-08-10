@@ -84,14 +84,11 @@ const App: React.FC = () => {
   }
 
   const handleCreateGame = useCallback(async (selectedColor: FigureColor | null, selectedGamee: Games | null) => {
-    console.log("aaaaa");
     if (selectedColor == null) throw new Error('Color not selected');
-    console.log("Selected game: " + selectedColor);
     try {
       if (selectedGamee === Games.Chess) {
         await createChessGame(selectedColor);
       } else if (selectedGamee === Games.Othello) {
-        console.log("Othelo");
         await createOthelloGame(selectedColor);
       } else {
         throw new Error("Unknown game type");
@@ -116,8 +113,6 @@ const App: React.FC = () => {
         return;
       }
       const gameData = await response.json();
-      console.log("✅ New chess game created:", gameData);
-
 
       setGameId(gameData.gameId);
       if (!stompClient) {
@@ -137,12 +132,10 @@ const App: React.FC = () => {
       if (gameData.gameId) {
         localStorage.setItem("gameId", gameData.gameId);
         localStorage.setItem("color", selectedColor);
-        console.log(localStorage.getItem("color"));
       }
 
       stompClient.subscribe(`/topic/game/${gameData.gameId}`, (message) => {
         const gameState = JSON.parse(message.body);
-        console.log("♟️ Chess game update received:", gameState);
         if (Array.isArray(gameState.board)) {
           newGame.getBoard().updateBoard(gameState.board, gameState.isPlaying);
           if (gameState.winner != null) {
@@ -175,7 +168,6 @@ const App: React.FC = () => {
       }
 
       const gameData = await response.json();
-      console.log("✅ New othello game created:", gameData);
       let gameId = gameData.gameId;
 
       setGameId(gameData.gameId);
@@ -196,13 +188,11 @@ const App: React.FC = () => {
       if (gameId) {
         localStorage.setItem("gameId", gameId);
         localStorage.setItem("color", selectedColor);
-        console.log(localStorage.getItem("color"));
       }
 
       stompClient.subscribe(`/topic/game/${gameData.gameId}`, (message) => {
         const gameState = JSON.parse(message.body);
         if (Array.isArray(gameState.board)) {
-          console.log(gameState);
           newGame.getBoard().updateBoard(gameState.board, gameState.isPlaying);
           if (gameState.winner != null) {
             setWinner(gameState.winner);
@@ -223,22 +213,17 @@ const App: React.FC = () => {
         const response = await fetch(`http://localhost:8080/${selectedGame?.toLocaleLowerCase()}/colors`);
         if (!response.ok) throw new Error("Game not found");
 
-        console.log(selectedGame);
         const gameData = await response.json();
-        console.log("✅ Joined game:", gameData);
 
         if (!stompClient) {
           showToast("WebSocket není připojen")
           return;
         }
-        console.log(gameData);
         let colors = String(gameData.color);
-        console.log("colors " + typeof colors);
         let colorsArr = colors.split(",");
         colorsArr.forEach((color) => availableColors.push(color == "WHITE" ? FigureColor.White : FigureColor.Black));
         setCreateJoinBool(false);
       } catch (error) {
-        console.log(error);
         showToast("Nepodařilo se připojit ke hře!")
       }
     } else {
@@ -247,7 +232,6 @@ const App: React.FC = () => {
         if (!response.ok) throw new Error("Game not found");
 
         const gameData = await response.json();
-        console.log("✅ Joined game:", gameData);
 
         if (!stompClient) {
           showToast("WebSocket není připojen")
@@ -292,7 +276,6 @@ const App: React.FC = () => {
 
 
       const gameData = await response.json();
-      console.log("✅ Color chosen:", gameData);
       if (!stompClient) {
         showToast("WebSocket není připojen");
         return;
@@ -312,8 +295,6 @@ const App: React.FC = () => {
       setShowColors(false);
       setShowGameOptions(false);
       setShowGames(false);
-      console.log(gameId);
-      console.log(color);
       if (gameId && color) {
         localStorage.setItem("gameId", gameId);
         localStorage.setItem("color", color);
@@ -351,8 +332,6 @@ const App: React.FC = () => {
       }
 
       const gameData = await response.json();
-      console.log(gameData);
-      console.log(gameData.game);
       if (!client) {
         showToast("WebSocket není připojen");
         return;

@@ -131,7 +131,6 @@ export class ChessBoard implements Board {
     }
 
     updateBoard(chessBoardDTO: ({ pieceType: string, color: string } | null)[][], currentPlayer: number) {
-        console.log("♟️ Updating board with data:", chessBoardDTO);
         this.deletePieces();
         this.initialize(chessBoardDTO);
         this.addPieceImageLoop();
@@ -178,7 +177,6 @@ export class ChessBoard implements Board {
     }
     initialize(chessBoardDTO: ({ pieceType: string, color: string } | null)[][]): JSX.Element {
         let board = this.createBoard();
-        console.log(chessBoardDTO);
         for (let row = 0; row < chessBoardDTO.length; row++) {
             for (let col = 0; col < chessBoardDTO[row].length; col++) {
                 const pieceType = chessBoardDTO[row][col]?.pieceType;

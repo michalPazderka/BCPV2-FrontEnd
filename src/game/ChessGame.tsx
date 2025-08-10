@@ -63,7 +63,6 @@ export class ChessGame extends AbsGame {
 
                         if (this.stompClient && this.stompClient.connected) {
                             const diff = arr[1] - y;
-                            console.log(diff);
                             if (this.activePiece.type == FigureType.King && (Math.abs(diff) == 2)) {
                                 const rookPosition = diff > 0 ? 0 : 7;
                                 const move = `${arr[0]}${arr[1]}${x}${y}${rookPosition}`;
@@ -71,8 +70,6 @@ export class ChessGame extends AbsGame {
                                     destination: "/app/chess/move",
                                     body: JSON.stringify({ gameId: this.gameId, move: move }),
                                 });
-                                console.log("📤 Move sent via WebSocket:", move);
-
                             } else {
 
                                 const move = `${arr[0]}${arr[1]}${x}${y}`;
@@ -80,10 +77,8 @@ export class ChessGame extends AbsGame {
                                     destination: "/app/chess/move",
                                     body: JSON.stringify({ gameId: this.gameId, move: move }),
                                 });
-                                console.log("📤 Move sent via WebSocket:", move);
                             }
                         } else {
-                            console.error("❌ WebSocket not connected!");
                             return;
                         }
 
@@ -99,7 +94,6 @@ export class ChessGame extends AbsGame {
             }
         }
         if (piece !== null && piece.color === this.currentPlayer && !didMove && this.playerColor === piece.color) {
-            console.log("nemůže hrát")
             this.activePiece = piece;
             this.APPM = piece.getPossibleMoves(this.board);
             if (piece.type == FigureType.King) {
@@ -109,7 +103,6 @@ export class ChessGame extends AbsGame {
                 this.board.possibleMoves(this.APPM);
             }
         } else {
-            console.log("aaaaaa")
             this.board.deleteCss();
         }
     }
@@ -132,81 +125,12 @@ export class ChessGame extends AbsGame {
         }
     }
 
-    /*getMoveHistory(from:[number,number],piece:Piece, to:[number,number], enemyPiece: Piece | null){
-      let a = new Move(from,to, piece, enemyPiece);
-      let b = a.createNotation();
-      this.moveHistory.push(a);
-      console.log(this.moveHistory);
-      this.showNotation(b);
-    }*/
     updateGameStatus(gameStatus: GameStatus): void {
         this.gameStatus = gameStatus;
     }
-    /*showNotation(notation: string): void {
-        let divNotation = document.getElementById("notation");
-        if (this.currentPlayer == FigureColor.Black) {
-            let newDiv = document.createElement("div");
-            newDiv.className = "notation-row";
-            newDiv.id = this.round.toString();
-            let newParagraph = document.createElement("p");
-            newParagraph.textContent = this.round + "." + notation + "   ";
-            newDiv.appendChild(newParagraph);
-            divNotation?.appendChild(newDiv);
-        } else {
-            let newDiv = document.getElementById(this.round.toString());
-            let newParagraph = document.createElement("p");
-            newParagraph.textContent = this.round + "." + notation;
-            if (newDiv != null) {
-                newDiv.appendChild(newParagraph);
-                divNotation?.appendChild(newDiv);
-            }
-            this.round++;
-        }
-    }*/
-
-    /*materialCounting(piece: Piece): void {
-        let color = piece.color;
-        let name = piece.type
-        if (color == FigureColor.Black) {
-            let indexToRemove = this.materialBlack.indexOf(name);
-            this.materialBlack.splice(indexToRemove, 1);
-        } else {
-            let indexToRemove = this.materialWhite.indexOf(name);
-            this.materialWhite.splice(indexToRemove, 1);
-        }
-        let black: boolean = this.countMaterial(FigureColor.Black);
-        let white: boolean = this.countMaterial(FigureColor.White);
-        if (white && black) {
-            this.gameEndedDraw();
-        }
-    }
-    countMaterial(color: FigureColor): boolean {
-        let material;
-        if (color == FigureColor.White) {
-            material = this.materialWhite;
-        } else {
-            material = this.materialBlack;
-        }
-        const numBishops = material.filter(name => name.includes("bishop")).length;
-        const numRooks = material.filter(name => name.includes("rook")).length;
-        const numHorses = material.filter(name => name.includes("horse")).length;
-        const numQuenns = material.filter(name => name.includes("quenn")).length;
-        const numPawn = material.filter(name => name.includes("pawn")).length;
-        if (numBishops > 1 || numRooks > 0 || numQuenns > 0 || numPawn > 0) {
-            return false;
-        }
-        if (numBishops === 1 && numHorses === 1) {
-            return false;
-        }
-        return true;
-    }*/
-
 
     async validateMove(move: string): Promise<string> {
-        console.log("📤 Sending move:", move);
-
         if (!this.stompClient || !this.stompClient.connected) {
-            console.error("❌ WebSocket not connected!");
             return "WebSocket error";
         }
 

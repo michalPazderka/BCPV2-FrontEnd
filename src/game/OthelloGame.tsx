@@ -26,7 +26,6 @@ export class OthelloGame extends AbsGame {
     async startGame(gameId: string, chessBoardDTO: ({ pieceType: string, color: string } | null)[][]): Promise<JSX.Element> {
         try {
             this.gameId = gameId;
-            console.log(chessBoardDTO);
             return this.board.initialize(chessBoardDTO);
         } catch (error) {
             console.error("Error starting game:", error);
@@ -59,9 +58,7 @@ export class OthelloGame extends AbsGame {
                         body: JSON.stringify({ gameId: this.gameId, move: move }),
                     });
                     this.APPM.length = 0;
-                    console.log("📤 Move sent via WebSocket:", move);
                 } else {
-                    console.error("❌ WebSocket not connected!");
                     return;
                 }
             }
@@ -71,7 +68,6 @@ export class OthelloGame extends AbsGame {
     }
 
     async validateMove(move: string): Promise<string> {
-        console.log("📤 Sending move:", move);
 
         if (!this.stompClient || !this.stompClient.connected) {
             console.error("❌ WebSocket not connected!");
